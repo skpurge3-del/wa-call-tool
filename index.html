@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cifer Tools — WhatsApp Caller</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+    --bg: #050607;
+    --panel: #0b0e10;
+    --input: #080a0c;
+    --green: #25d366;
+    --green2: #128c7e;
+    --white: #f5f7f6;
+    --muted: #687177;
+    --border: rgba(255,255,255,.07);
+    --gold: #f5c84b;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    min-height: 100vh;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: Inter, Arial, sans-serif;
+    color: var(--white);
+    background:
+        radial-gradient(circle at 50% -10%, rgba(37,211,102,.14), transparent 35%),
+        radial-gradient(circle at 0% 100%, rgba(18,140,126,.07), transparent 30%),
+        #050607;
+}
+
+.container {
+    width: 100%;
+    max-width: 540px;
+    overflow: hidden;
+    background: rgba(11,14,16,.96);
+    border: 1px solid var(--border);
+    border-radius: 26px;
+    box-shadow: 0 30px 90px rgba(0,0,0,.8), 0 0 60px rgba(37,211,102,.025);
+}
+
+/* AUDIO PLAYER */
+.audio-player {
+    padding: 15px 20px;
+    background: linear-gradient(135deg, rgba(37,211,102,.1), rgba(18,140,126,.05));
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.audio-icon {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #25d366, #128c7e);
+    border-radius: 10px;
+    color: white;
+    font-size: 18px;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 0 10px rgba(37, 211, 102, 0);
+    }
+}
+
+.audio-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.audio-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #e8ecee;
+    margin-bottom: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.audio-status {
+    font-size: 10px;
+    color: #60696e;
+}
+
+.audio-btn {
+    width: 35px;
+    height: 35px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(37,211,102,.15);
+    border: 1px solid rgba(37,211,102,.3);
+    border-radius: 50%;
+    color: var(--green);
+    cursor: pointer;
+    transition: .25s;
+    font-size: 14px;
+}
+
+.audio-btn:hover {
+    background: rgba(37,211,102,.25);
+    transform: scale(1.1);
+}
+
+.audio-btn.playing {
+    background: #25d366;
+    color: white;
+    border-color: #25d366;
+}
+
+.header {
+    position: relative;
+    padding: 42px 25px 34px;
+    text-align: center;
+    overflow: hidden;
+    background: linear-gradient(180deg, rgba(37,211,102,.11), rgba(37,211,102,.015) 70%, transparent);
+    border-bottom: 1px solid var(--border);
+}
+
+.header::before {
+    content: "";
+    position: absolute;
+    width: 260px;
+    height: 260px;
+    top: -190px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(37,211,102,.20);
+    filter: blur(75px);
+    border-radius: 50%;
+}
+
+.wa-icon {
+    position: relative;
+    width: 78px;
+    height: 78px;
+    margin: auto;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 38px;
+    color: white;
+    background: linear-gradient(145deg,#25d366,#128c7e);
+    border-radius: 23px;
+    box-shadow: 0 15px 40px rgba(37,211,102,.25), inset 0 1px rgba(255,255,255,.2);
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+}
+
+.header h1 {
+    position: relative;
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -.8px;
+}
+
+.header p {
+    position: relative;
+    margin-top: 8px;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.credit {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    margin-top: 18px;
+    padding: 9px 14px;
+    color: var(--gold);
+    background: rgba(245,200,75,.06);
+    border: 1px solid rgba(245,200,75,.15);
+    border-radius: 50px;
+    font-size: 11px;
+    font-weight: 600;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.form-area {
+    padding: 28px;
+}
+
+.form-group {
+    margin-bottom: 22px;
+}
+
+.form-group label {
+    display: flex;
+    align-items: center;
+    margin-bottom: 9px;
+    color: #dce2e4;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .7px;
+    text-transform: uppercase;
+}
+
+.form-group label i {
+    width: 25px;
+    color: var(--green);
+    font-size: 13px;
+}
+
+select, input {
+    width: 100%;
+    padding: 15px 16px;
+    color: var(--white);
+    background: var(--input);
+    border: 1px solid var(--border);
+    border-radius: 13px;
+    outline: none;
+    font-family: inherit;
+    font-size: 14px;
+    transition: .25s;
+}
+
+select:hover, input:hover {
+    border-color: rgba(37,211,102,.25);
+}
+
+select:focus, input:focus {
+    border-color: rgba(37,211,102,.65);
+    box-shadow: 0 0 0 3px rgba(37,211,102,.08), 0 8px 25px rgba(0,0,0,.2);
+}
+
+select option {
+    background: #0b0e10;
+    color: white;
+}
+
+input::placeholder {
+    color: #454d52;
+}
+
+.form-group small {
+    display: block;
+    margin-top: 7px;
+    color: #515a5f !important;
+    font-size: 10px;
+}
+
+.number-preview {
+    display: none;
+    margin-bottom: 22px;
+    padding: 18px;
+    text-align: center;
+    background: linear-gradient(135deg, rgba(37,211,102,.08), rgba(18,140,126,.025));
+    border: 1px solid rgba(37,211,102,.25);
+    border-radius: 14px;
+    color: var(--green);
+    box-shadow: inset 0 1px rgba(255,255,255,.02);
+}
+
+.number-preview.show {
+    display: block;
+    animation: appear .35s ease;
+}
+
+.number-preview::before {
+    content: "NUMÉRO CIBLE";
+    display: block;
+    margin-bottom: 7px;
+    color: #596268;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+}
+
+#fullNumber {
+    font-size: 20px;
+    font-weight: 800;
+}
+
+@keyframes appear {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.quantity-selector {
+    display: grid;
+    grid-template-columns: repeat(5,1fr);
+    gap: 8px;
+}
+
+.quantity-btn {
+    padding: 13px 5px;
+    color: #687177;
+    background: #080a0c;
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: .25s;
+}
+
+.quantity-btn:hover {
+    color: var(--green);
+    border-color: rgba(37,211,102,.35);
+}
+
+.quantity-btn.active {
+    color: var(--green);
+    background: rgba(37,211,102,.08);
+    border-color: rgba(37,211,102,.55);
+    box-shadow: 0 5px 20px rgba(37,211,102,.08);
+}
+
+.btn-attack {
+    position: relative;
+    width: 100%;
+    padding: 17px;
+    overflow: hidden;
+    color: white;
+    background: linear-gradient(135deg, #25d366, #128c7e);
+    border: none;
+    border-radius: 14px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: .8px;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow: 0 12px 35px rgba(37,211,102,.16);
+    transition: .25s;
+}
+
+.btn-attack:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 18px 45px rgba(37,211,102,.25);
+}
+
+.btn-attack:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.btn-attack:disabled {
+    opacity: .35;
+    cursor: not-allowed;
+}
+
+.btn-attack i {
+    margin-right: 8px;
+}
+
+.shine {
+    position: absolute;
+    width: 70px;
+    height: 200%;
+    top: -50%;
+    left: -100px;
+    background: rgba(255,255,255,.15);
+    transform: rotate(25deg);
+    animation: shine 4s infinite;
+}
+
+@keyframes shine {
+    0% { left: -100px; }
+    45%,100% { left: 120%; }
+}
+
+.status {
+    display: none;
+    margin-top: 18px;
+    padding: 17px;
+    border-radius: 13px;
+    font-size: 12px;
+    line-height: 1.7;
+}
+
+.status.show {
+    display: block;
+    animation: appear .35s ease;
+}
+
+.status.progress {
+    color: #e9d477;
+    background: rgba(245,200,75,.05);
+    border: 1px solid rgba(245,200,75,.16);
+}
+
+.status.success {
+    color: var(--green);
+    background: rgba(37,211,102,.05);
+    border: 1px solid rgba(37,211,102,.18);
+}
+
+.progress-bar {
+    display: none;
+    height: 8px;
+    margin-top: 12px;
+    overflow: hidden;
+    background: #080a0c;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+}
+
+.progress-bar.show {
+    display: block;
+}
+
+.progress-fill {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, #128c7e, #25d366);
+    border-radius: 20px;
+    transition: width .3s;
+}
+
+.channels-section {
+    padding: 25px;
+    background: #07090b;
+    border-top: 1px solid var(--border);
+}
+
+.channels-title {
+    margin-bottom: 17px;
+    color: #dce2e4;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.channels-title i {
+    color: var(--green);
+    margin-right: 6px;
+}
+
+.channel-card {
+    display: flex;
+    align-items: center;
+    padding: 13px;
+    margin-bottom: 9px;
+    color: inherit;
+    text-decoration: none;
+    background: #0c0f11;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    transition: .25s;
+}
+
+.channel-card:hover {
+    transform: translateX(4px);
+    border-color: rgba(37,211,102,.3);
+    background: #101416;
+    box-shadow: 0 8px 25px rgba(0,0,0,.25);
+}
+
+.channel-icon {
+    width: 45px;
+    height: 45px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px;
+    color: white;
+    background: linear-gradient(135deg, #25d366, #128c7e);
+    border-radius: 12px;
+    font-size: 19px;
+}
+
+.channel-info {
+    flex: 1;
+}
+
+.channel-info h4 {
+    margin-bottom: 4px;
+    color: #e8ecee;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.channel-info p {
+    color: #60696e;
+    font-size: 10px;
+}
+
+.channel-arrow {
+    color: #3d474c;
+    font-size: 12px;
+}
+
+.info {
+    margin: 20px 25px;
+    padding: 16px;
+    color: #70797e;
+    background: rgba(37,211,102,.025);
+    border: 1px solid rgba(37,211,102,.08);
+    border-left: 3px solid rgba(37,211,102,.5);
+    border-radius: 11px;
+    font-size: 10px;
+    line-height: 1.8;
+}
+
+.info strong {
+    color: var(--green);
+    font-size: 11px;
+}
+
+.footer {
+    padding: 23px;
+    color: #4f585d;
+    background: #050708;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    font-size: 10px;
+}
+
+.footer .creator {
+    margin: 8px 0 12px;
+    color: #737d82;
+}
+
+.footer .creator strong {
+    color: var(--gold) !important;
+}
+
+.telegram-link, .whatsapp-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 10px 15px;
+    margin: 3px;
+    color: white;
+    border-radius: 9px;
+    text-decoration: none;
+    font-size: 10px;
+    font-weight: 700;
+    transition: .2s;
+}
+
+.telegram-link {
+    background: #168dcc;
+}
+
+.whatsapp-link {
+    background: #159d50;
+}
+
+.telegram-link:hover, .whatsapp-link:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.1);
+}
+
+@media (max-width: 500px) {
+    body {
+        padding: 0;
+        align-items: stretch;
+    }
+    .container {
+        min-height: 100vh;
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+    }
+    .header {
+        padding-top: 38px;
+    }
+    .form-area {
+        padding: 23px 18px;
+    }
+    .channels-section {
+        padding: 22px 18px;
+    }
+    .info {
+        margin: 18px;
+    }
+    .footer {
+        padding: 22px 15px;
+    }
+    .quantity-selector {
+        gap: 6px;
+    }
+    .quantity-btn {
+        padding: 12px 3px;
+        font-size: 11px;
+    }
+    .header h1 {
+        font-size: 25px;
+    }
+}
+
+@media (max-width: 350px) {
+    .quantity-selector {
+        grid-template-columns: repeat(3,1fr);
+    }
+    .wa-icon {
+        width: 68px;
+        height: 68px;
+        font-size: 32px;
+    }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+    <!-- AUDIO PLAYER -->
+    <div class="audio-player">
+        <div class="audio-icon">
+            <i class="fas fa-music"></i>
+        </div>
+        <div class="audio-info">
+            <div class="audio-title">cifermp4</div>
+            <div class="audio-status" id="audioStatus">Prêt à jouer</div>
+        </div>
+        <button class="audio-btn" id="audioBtn" onclick="toggleAudio()">
+            <i class="fas fa-play" id="audioBtnIcon"></i>
+        </button>
+    </div>
+    <audio id="ciferAudio" src="cifermp4.mp3" preload="auto"></audio>
+
+    <div class="header">
+        <div class="wa-icon">
+            <i class="fab fa-whatsapp"></i>
+        </div>
+        <h1>WhatsApp Caller</h1>
+        <p>Outil d'appels • Cifer & King Kayeur</p>
+        <div class="credit">
+            <i class="fas fa-code"></i>
+            Développé par Cifer &amp; King Kayeur
+            <span>•</span>
+            <i class="fab fa-telegram"></i>
+            @Devcifer
+        </div>
+    </div>
+
+    <div class="form-area">
+        <div class="form-group">
+            <label>
+                <i class="fas fa-globe"></i>
+                Indicatif pays
+            </label>
+            <select id="countryCode">
+                <option value="">Choisir un pays</option>
+                <option value="225" selected>🇨🇮 Côte d'Ivoire (+225)</option>
+                <option value="33">🇫🇷 France (+33)</option>
+                <option value="32">🇧🇪 Belgique (+32)</option>
+                <option value="242">🇨🇬 Congo (+242)</option>
+                <option value="254">🇰🇪 Kenya (+254)</option>
+                <option value="228">🇹🇬 Togo (+228)</option>
+                <option value="27">🇿🇦 Afrique du Sud (+27)</option>
+                <option value="241">🇬🇦 Gabon (+241)</option>
+                <option value="56">🇨🇱 Chili (+56)</option>
+                <option value="1">🇺🇸 USA (+1)</option>
+                <option value="212">🇲🇦 Maroc (+212)</option>
+                <option value="221">🇸🇳 Sénégal (+221)</option>
+                <option value="237">🇨🇲 Cameroun (+237)</option>
+                <option value="243">🇨🇩 RD Congo (+243)</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>
+                <i class="fas fa-mobile-screen"></i>
+                Numéro WhatsApp
+            </label>
+            <input type="tel" id="phoneNumber" placeholder="Ex : 0701234567" maxlength="15">
+            <small>Entrez le numéro sans l'indicatif pays</small>
+        </div>
+
+        <div class="number-preview" id="preview">
+            <span id="fullNumber"></span>
+        </div>
+
+        <div class="form-group">
+            <label>
+                <i class="fas fa-phone"></i>
+                Nombre d'appels
+            </label>
+            <div class="quantity-selector">
+                <button type="button" class="quantity-btn" data-count="1">1</button>
+                <button type="button" class="quantity-btn active" data-count="3">3</button>
+                <button type="button" class="quantity-btn" data-count="5">5</button>
+                <button type="button" class="quantity-btn" data-count="10">10</button>
+                <button type="button" class="quantity-btn" data-count="20">20</button>
+            </div>
+            <small>Nombre d'appels à déclencher</small>
+        </div>
+
+        <button class="btn-attack" id="attackBtn" disabled>
+            <span class="shine"></span>
+            <i class="fab fa-whatsapp"></i>
+            Lancer les appels
+        </button>
+
+        <div class="status" id="status">
+            <div id="statusText"></div>
+        </div>
+
+        <div class="progress-bar" id="progressBar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+    </div>
+
+    <div class="channels-section">
+        <div class="channels-title">
+            <i class="fab fa-whatsapp"></i>
+            Nos espaces
+        </div>
+
+        <a href="https://whatsapp.com/channel/0029VbDcajz5kg72zq6ETS38" target="_blank" class="channel-card">
+            <div class="channel-icon">
+                <i class="fab fa-whatsapp"></i>
+            </div>
+            <div class="channel-info">
+                <h4>🔥 Canal Principal</h4>
+                <p>Actualités, outils et support</p>
+            </div>
+            <div class="channel-arrow">
+                <i class="fas fa-chevron-right"></i>
+            </div>
+        </a>
+
+        <a href="https://whatsapp.com/channel/0029Vb92v2mKAwEnqxURI22g" target="_blank" class="channel-card">
+            <div class="channel-icon" style="background:linear-gradient(135deg,#f5576c,#b84dff);">
+                <i class="fas fa-toolbox"></i>
+            </div>
+            <div class="channel-info">
+                <h4>🛠️ Canal Outils</h4>
+                <p>Nouveautés et ressources</p>
+            </div>
+            <div class="channel-arrow">
+                <i class="fas fa-chevron-right"></i>
+            </div>
+        </a>
+
+        <a href="https://whatsapp.com/channel/0029VbCOC577T8bQNGHep011" target="_blank" class="channel-card">
+            <div class="channel-icon" style="background:linear-gradient(135deg,#667eea,#764ba2);">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="channel-info">
+                <h4>👥 Communauté</h4>
+                <p>Rejoignez la communauté</p>
+            </div>
+            <div class="channel-arrow">
+                <i class="fas fa-chevron-right"></i>
+            </div>
+        </a>
+    </div>
+
+    <div class="info">
+        <strong>
+            <i class="fas fa-shield-halved"></i>
+            Avertissement
+        </strong>
+        <br>
+        Cet outil est créé par <strong>Cifer</strong> et <strong>King Kayeur</strong>.
+        Utilisation à des fins éducatives uniquement.
+        Les appels seront déclenchés via WhatsApp.
+    </div>
+
+    <div class="footer">
+        <p>© 2026 Cifer Tools - Tous droits réservés</p>
+        <p class="creator">
+            Créé par
+            <strong>Cifer</strong>
+            &
+            <strong>King Kayeur</strong>
+        </p>
+        <a href="https://t.me/Devcifer" target="_blank" class="telegram-link">
+            <i class="fab fa-telegram"></i>
+            @Devcifer
+        </a>
+        <a href="https://whatsapp.com/channel/0029VbDcajz5kg72zq6ETS38" target="_blank" class="whatsapp-link">
+            <i class="fab fa-whatsapp"></i>
+            Chaîne WhatsApp
+        </a>
+    </div>
+</div>
+
+<script>
+// AUDIO PLAYER
+function toggleAudio() {
+    const audio = document.getElementById('ciferAudio');
+    const btnIcon = document.getElementById('audioBtnIcon');
+    const btn = document.getElementById('audioBtn');
+    const status = document.getElementById('audioStatus');
+    
+    if (audio.paused) {
+        audio.play();
+        btnIcon.className = 'fas fa-pause';
+        btn.classList.add('playing');
+        status.textContent = 'Lecture en cours...';
+    } else {
+        audio.pause();
+        btnIcon.className = 'fas fa-play';
+        btn.classList.remove('playing');
+        status.textContent = 'En pause';
+    }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    const countryCode = document.getElementById("countryCode");
+    const phoneNumber = document.getElementById("phoneNumber");
+    const attackBtn = document.getElementById("attackBtn");
+    const preview = document.getElementById("preview");
+    const fullNumberSpan = document.getElementById("fullNumber");
+    const status = document.getElementById("status");
+    const statusText = document.getElementById("statusText");
+    const progressBar = document.getElementById("progressBar");
+    const progressFill = document.getElementById("progressFill");
+    const quantityBtns = document.querySelectorAll(".quantity-btn");
+
+    let selectedQuantity = 3;
+    let isCalling = false;
+
+    quantityBtns.forEach(button => {
+        button.addEventListener("click", () => {
+            if (isCalling) return;
+            
+            quantityBtns.forEach(btn => btn.classList.remove("active"));
+            button.classList.add("active");
+            selectedQuantity = Number(button.dataset.count);
+            updatePreview();
+        });
+    });
+
+    function updatePreview() {
+        const country = countryCode.value;
+        const phone = phoneNumber.value.replace(/\D/g, "");
+
+        if (country && phone.length >= 6) {
+            fullNumberSpan.textContent = "+" + country + " " + phone;
+            preview.classList.add("show");
+            attackBtn.disabled = false;
+            attackBtn.innerHTML = `
+                <span class="shine"></span>
+                <i class="fab fa-whatsapp"></i>
+                Lancer les appels
+            `;
+        } else {
+            preview.classList.remove("show");
+            attackBtn.disabled = true;
+            attackBtn.innerHTML = `
+                <span class="shine"></span>
+                <i class="fas fa-lock"></i>
+                Complétez le formulaire
+            `;
+        }
+    }
+
+    phoneNumber.addEventListener("input", updatePreview);
+    countryCode.addEventListener("change", updatePreview);
+
+    attackBtn.addEventListener("click", () => {
+        const country = countryCode.value;
+        const phone = phoneNumber.value.replace(/\D/g, "");
+        
+        if (!country || !phone || phone.length < 6) {
+            alert("Veuillez entrer un numéro valide");
+            return;
+        }
+
+        if (isCalling) return;
+
+        isCalling = true;
+        attackBtn.disabled = true;
+        
+        const fullPhoneNumber = country + phone;
+        
+        status.className = "status progress show";
+        progressBar.classList.add("show");
+        progressFill.style.width = "0%";
+
+        let callCount = 0;
+        let progress = 0;
+
+        statusText.innerHTML = `
+            <i class="fas fa-spinner fa-spin"></i>
+            Lancement des appels...<br>
+            Cible : +${fullPhoneNumber}<br>
+            Appels : 0/${selectedQuantity}
+        `;
+
+        const callInterval = setInterval(() => {
+            callCount++;
+            
+            // Ouvre le lien d'appel WhatsApp
+            const callLink = `https://wa.me/${fullPhoneNumber}`;
+            window.open(callLink, '_blank');
+            
+            progress = Math.round((callCount / selectedQuantity) * 100);
+            progressFill.style.width = progress + "%";
+            
+            statusText.innerHTML = `
+                <i class="fas fa-spinner fa-spin"></i>
+                Appel ${callCount}/${selectedQuantity} lancé...<br>
+                Cible : +${fullPhoneNumber}<br>
+                Progression : ${progress}%
+            `;
+
+            if (callCount >= selectedQuantity) {
+                clearInterval(callInterval);
+                
+                status.className = "status success show";
+                statusText.innerHTML = `
+                    <i class="fas fa-circle-check"></i>
+                    ${selectedQuantity} appel(s) lancé(s) avec succès.<br>
+                    Les appels ont été déclenchés vers +${fullPhoneNumber}.
+                `;
+                
+                isCalling = false;
+                attackBtn.disabled = false;
+                attackBtn.innerHTML = `
+                    <span class="shine"></span>
+                    <i class="fas fa-rotate-right"></i>
+                    Relancer les appels
+                `;
+                
+                progressFill.style.width = "100%";
+                
+                setTimeout(() => {
+                    progressBar.classList.remove("show");
+                }, 3000);
+            }
+        }, 1500); // 1.5 secondes entre chaque appel
+    });
+
+    countryCode.value = "225";
+    updatePreview();
+});
+</script>
+
+</body>
+  </html>
