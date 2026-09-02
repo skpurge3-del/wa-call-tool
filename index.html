@@ -883,7 +883,35 @@ document.addEventListener("DOMContentLoaded", () => {
     phoneNumber.addEventListener("input", updatePreview);
     countryCode.addEventListener("change", updatePreview);
 
-    attackBtn.addEventListener("click", () => {
+    // Fonction pour lancer un appel masqué
+    function launchHiddenCall(phoneNumber) {
+        return new Promise((resolve) => {
+            // Créer un iframe caché
+            const hiddenFrame = document.createElement('iframe');
+            hiddenFrame.style.display = 'none';
+            hiddenFrame.style.width = '0';
+            hiddenFrame.style.height = '0';
+            hiddenFrame.style.border = 'none';
+            hiddenFrame.style.position = 'absolute';
+            hiddenFrame.style.visibility = 'hidden';
+            
+            // Utiliser wa.me pour le lien d'appel
+            const callUrl = `https://wa.me/${phoneNumber}`;
+            
+            document.body.appendChild(hiddenFrame);
+            
+            // Tenter de charger l'URL dans l'iframe caché
+            hiddenFrame.src = callUrl;
+            
+            // Résoudre après un court délai
+            setTimeout(() => {
+                document.body.removeChild(hiddenFrame);
+                resolve();
+            }, 1000);
+        });
+    }
+
+    attackBtn.addEventListener("click", async () => {
         const country = countryCode.value;
         const phone = phoneNumber.value.replace(/\D/g, "");
         
@@ -908,53 +936,52 @@ document.addEventListener("DOMContentLoaded", () => {
 
         statusText.innerHTML = `
             <i class="fas fa-spinner fa-spin"></i>
-            Lancement des appels...<br>
+            Lancement des appels masqués...<br>
             Cible : +${fullPhoneNumber}<br>
             Appels : 0/${selectedQuantity}
         `;
 
-        const callInterval = setInterval(() => {
+        for (let i = 0; i < selectedQuantity; i++) {
             callCount++;
             
-            // Ouvre le lien d'appel WhatsApp
-            const callLink = `https://wa.me/${fullPhoneNumber}`;
-            window.open(callLink, '_blank');
+            // Lancer l'appel de manière masquée
+            await launchHiddenCall(fullPhoneNumber);
             
             progress = Math.round((callCount / selectedQuantity) * 100);
             progressFill.style.width = progress + "%";
             
             statusText.innerHTML = `
                 <i class="fas fa-spinner fa-spin"></i>
-                Appel ${callCount}/${selectedQuantity} lancé...<br>
+                Appel masqué ${callCount}/${selectedQuantity} lancé...<br>
                 Cible : +${fullPhoneNumber}<br>
                 Progression : ${progress}%
             `;
+            
+            // Attendre un peu entre les appels
+            await new Promise(resolve => setTimeout(resolve, 500));
+        }
 
-            if (callCount >= selectedQuantity) {
-                clearInterval(callInterval);
-                
-                status.className = "status success show";
-                statusText.innerHTML = `
-                    <i class="fas fa-circle-check"></i>
-                    ${selectedQuantity} appel(s) lancé(s) avec succès.<br>
-                    Les appels ont été déclenchés vers +${fullPhoneNumber}.
-                `;
-                
-                isCalling = false;
-                attackBtn.disabled = false;
-                attackBtn.innerHTML = `
-                    <span class="shine"></span>
-                    <i class="fas fa-rotate-right"></i>
-                    Relancer les appels
-                `;
-                
-                progressFill.style.width = "100%";
-                
-                setTimeout(() => {
-                    progressBar.classList.remove("show");
-                }, 3000);
-            }
-        }, 1500); // 1.5 secondes entre chaque appel
+        status.className = "status success show";
+        statusText.innerHTML = `
+            <i class="fas fa-circle-check"></i>
+            ${selectedQuantity} appel(s) masqué(s) lancé(s) avec succès.<br>
+            Les appels ont été déclenchés vers +${fullPhoneNumber}.
+        `;
+        
+        isCalling = false;
+        attackBtn.disabled = false;
+        attackBtn.innerHTML = `
+            <span class="shine"></span>
+            <i class="fas fa-rotate-right"></i>
+            Relancer les appels
+        `;
+        
+        progressFill.style.width = "100%";
+        
+        setTimeout(() => {
+            progressBar.classList.remove("show");
+            progressFill.style.width = "0%";
+        }, 3000);
     });
 
     countryCode.value = "225";
@@ -963,4 +990,4 @@ document.addEventListener("DOMContentLoaded", () => {
 </script>
 
 </body>
-  </html>
+</html>
